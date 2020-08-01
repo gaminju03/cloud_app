@@ -35,7 +35,7 @@ void initState() {
     .collection('bandnames')
     //.where("topic", isEqualTo: "flutter")
     .snapshots()
-    .listen((data) =>
+    .listen((data) => //parte mas importante con la app en ejecucion 
         data.documents.forEach((doc) => print(doc['name'])));
 
 }
@@ -49,15 +49,20 @@ void initState() {
 CupertinoSliverNavigationBar(largeTitle: Text('Band Names and Survey'),
 ),
 SliverSafeArea(
-  sliver:   SliverList(
+  sliver:   StreamBuilder<QuerySnapshot>(
+    stream: Firestore.instance.collection('bandanames').snapshots(),
+    builder: (BuildContext context,AsyncSnapshot<QuerySnapshot>snapshot){
+        if(!snapshot.hasData)return SliverToBoxAdapter(child: CupertinoActivityIndicator());
+        return SliverList(
       delegate: SliverChildBuilderDelegate(
         (BuildContext context, int index){
-          return _buildListItem(context,_bandList[index]);// de donde los va a recuperar 
+          return _buildListItem(context,snapshot.data.documents[index]);// de donde los va a recuperar 
           
-        },
-        childCount: _bandList.length),
-  ),
-)
+        },childCount: snapshot.data.documents.length),
+  );
+    },
+    ),
+   ),
           ],),
       ),
     );
@@ -65,12 +70,14 @@ SliverSafeArea(
   }
 }
 
-Widget _buildListItem(BuildContext context, DemoInfo bandInfo){
+
+
+Widget _buildListItem(BuildContext context, DocumentSnapshot document){
   return ListTile (
-    title: Text(bandInfo.name),
+    title: Text(document['name']),
     trailing: Row(mainAxisSize: MainAxisSize.min,
     children: <Widget>[
-      Text(bandInfo.votes.toString()),
+      Text(document['votes'].toString()),
       Icon(CupertinoIcons.right_chevron),
     ],
     )
